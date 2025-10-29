@@ -57,3 +57,32 @@ grid on;
 axis tight; % 自动调整坐标轴
 
 disp('数据加载和初步可视化完成。');
+
+% 5. 计算 HRV 指标
+disp('正在计算 HRV 指标...');
+td_metrics = calculate_time_domain(rr_data.rr_ms);
+fd_metrics = calculate_freq_domain(rr_data.rr_ms, rr_data.timestamps_ms);
+nl_metrics = plot_poincare(rr_data.rr_ms); % This will also generate a plot
+disp('HRV 指标计算完成。');
+
+% 6. 生成 HRV 状态总结报告
+fprintf('\n=====================================\n');
+fprintf('    HRV 状态总结报告\n');
+fprintf('=====================================\n\n');
+
+fprintf('--- 时域指标 ---\n');
+fprintf('Mean NN (RR): %.2f ms\n', td_metrics.MeanNN);
+fprintf('SDNN:         %.2f ms\n', td_metrics.SDNN);
+fprintf('RMSSD:        %.2f ms\n', td_metrics.RMSSD);
+fprintf('pNN50:        %.2f %%\n\n', td_metrics.pNN50);
+
+fprintf('--- 频域指标 ---\n');
+fprintf('VLF Power:    %.2f ms^2\n', fd_metrics.VLF_Power);
+fprintf('LF Power:     %.2f ms^2\n', fd_metrics.LF_Power);
+fprintf('HF Power:     %.2f ms^2\n', fd_metrics.HF_Power);
+fprintf('LF/HF Ratio:  %.2f\n\n', fd_metrics.LF_HF_Ratio);
+
+fprintf('--- 非线性指标 (庞加莱) ---\n');
+fprintf('SD1:          %.2f ms\n', nl_metrics.SD1);
+fprintf('SD2:          %.2f ms\n', nl_metrics.SD2);
+fprintf('\n=====================================\n');
