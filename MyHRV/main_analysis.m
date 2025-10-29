@@ -25,7 +25,11 @@ catch ME
     rethrow(ME);
 end
 
-% 4. 数据导入“健全性检查” (Sanity Check)
+% 4. (新增) 预处理 - 伪影修正
+disp('正在修正 RR 数据中的伪影...');
+rr_data = clean_rr_artifacts(rr_data);
+
+% 5. 数据导入“健全性检查” (Sanity Check)
 %    在进行复杂分析前，先快速绘图查看数据是否正确
 
 % --- 更新：统一设置显示时长 ---
@@ -59,14 +63,14 @@ axis tight; % 自动调整坐标轴
 
 disp('数据加载和初步可视化完成。');
 
-% 5. 计算 HRV 指标
+% 6. 计算 HRV 指标
 disp('正在计算 HRV 指标...');
-td_metrics = calculate_time_domain(rr_data.rr_ms);
-fd_metrics = calculate_freq_domain(rr_data.rr_ms, rr_data.timestamps_ms);
-nl_metrics = plot_poincare(rr_data.rr_ms); % This will also generate a plot
+td_metrics = calculate_time_domain(rr_data.rr_ms_clean);
+fd_metrics = calculate_freq_domain(rr_data.rr_ms_clean, rr_data.timestamps_ms);
+nl_metrics = plot_poincare(rr_data.rr_ms_clean); % This will also generate a plot
 disp('HRV 指标计算完成。');
 
-% 6. 生成并打印动态 HRV 报告
+% 7. 生成并打印动态 HRV 报告
 fprintf('正在生成 HRV 动态报告...\n');
 generate_hrv_report(td_metrics, fd_metrics, nl_metrics);
 
