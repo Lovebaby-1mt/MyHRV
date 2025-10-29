@@ -9,6 +9,7 @@ clear; clc; close all;
 addpath('preprocessing');
 addpath('visualization');
 addpath('core_functions');
+addpath('reporting');
 
 % 2. 定义文件路径
 rr_file_path = 'HR_2025.10.27_19.30.36.txt';
@@ -65,24 +66,8 @@ fd_metrics = calculate_freq_domain(rr_data.rr_ms, rr_data.timestamps_ms);
 nl_metrics = plot_poincare(rr_data.rr_ms); % This will also generate a plot
 disp('HRV 指标计算完成。');
 
-% 6. 生成 HRV 状态总结报告
-fprintf('\n=====================================\n');
-fprintf('    HRV 状态总结报告\n');
-fprintf('=====================================\n\n');
+% 6. 生成并打印动态 HRV 报告
+fprintf('正在生成 HRV 动态报告...\n');
+generate_hrv_report(td_metrics, fd_metrics, nl_metrics);
 
-fprintf('--- 时域指标 ---\n');
-fprintf('Mean NN (RR): %.2f ms\n', td_metrics.MeanNN);
-fprintf('SDNN:         %.2f ms\n', td_metrics.SDNN);
-fprintf('RMSSD:        %.2f ms\n', td_metrics.RMSSD);
-fprintf('pNN50:        %.2f %%\n\n', td_metrics.pNN50);
-
-fprintf('--- 频域指标 ---\n');
-fprintf('VLF Power:    %.2f ms^2\n', fd_metrics.VLF_Power);
-fprintf('LF Power:     %.2f ms^2\n', fd_metrics.LF_Power);
-fprintf('HF Power:     %.2f ms^2\n', fd_metrics.HF_Power);
-fprintf('LF/HF Ratio:  %.2f\n\n', fd_metrics.LF_HF_Ratio);
-
-fprintf('--- 非线性指标 (庞加莱) ---\n');
-fprintf('SD1:          %.2f ms\n', nl_metrics.SD1);
-fprintf('SD2:          %.2f ms\n', nl_metrics.SD2);
-fprintf('\n=====================================\n');
+fprintf('分析流程结束。\n');
