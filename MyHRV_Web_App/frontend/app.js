@@ -31,9 +31,25 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        loader.style.display = 'block';
+        gsap.set(".loader-dot", { y: 0, opacity: 1 });
+        loader.style.display = 'flex';
+        gsap.to(".loader-dot", {
+            y: -20,
+            stagger: {
+                each: 0.1,
+                repeat: -1,
+                yoyo: true
+            },
+            ease: "power1.inOut"
+        });
         analyzeButton.disabled = true;
         reportContainer.innerHTML = '<p>Processing your file...</p>';
+
+        // Clear previous plots
+        Plotly.purge('poincare-plot');
+        Plotly.purge('ecg-plot-full');
+        Plotly.purge('ecg-plot-slider');
+
 
         try {
             const hrText = await readFileAsText(hrFile);
@@ -67,7 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("An error occurred:", error);
             reportContainer.innerHTML = `<p class="error">An error occurred: ${error.message}</p>`;
         } finally {
-            loader.style.display = 'none';
+            gsap.to(loader, {
+                duration: 0.5,
+                opacity: 0,
+                onComplete: () => {
+                    loader.style.display = 'none';
+                    gsap.set(loader, { opacity: 1 }); // Reset for next time
+                }
+            });
             analyzeButton.disabled = !hrFile;
         }
     }
@@ -85,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const reportContainer = document.getElementById('report-container');
         let reportHTML = '<h2>HRV Status Report</h2>';
 
-        reportHTML += '<h3>Time-Domain Metrics</h3>';
+        reportHTML += '<div class="report-section"><h3>Time-Domain Metrics</h3>';
         const meanHR = 60000 / metrics.HRV_MeanNN;
         reportHTML += `<p>Mean NN (RR): ${metrics.HRV_MeanNN.toFixed(2)} ms (Average Heart Rate: ${meanHR.toFixed(0)} BPM)</p>`;
         if (meanHR > 100) {
@@ -97,7 +120,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             reportHTML += '<p>Status: Deep relaxation or sleep state.</p>';
         }
+        reportHTML += '</div>';
 
+        reportHTML += '<div class="report-section">';
         reportHTML += `<p>RMSSD: ${metrics.HRV_RMSSD.toFixed(2)} ms</p>`;
         if (metrics.HRV_RMSSD > 50) {
             reportHTML += '<p>Status: Very active parasympathetic nervous system (good recovery or high endurance).</p>';
@@ -106,8 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             reportHTML += '<p>Status: Low parasympathetic activity (possible stress, fatigue, or insufficient recovery).</p>';
         }
+        reportHTML += '</div>';
 
-        reportHTML += '<h3>Frequency-Domain Metrics</h3>';
+        reportHTML += '<div class="report-section"><h3>Frequency-Domain Metrics</h3>';
         reportHTML += `<p>LF/HF Ratio: ${metrics.HRV_LFHF.toFixed(2)}</p>`;
         if (metrics.HRV_LFHF > 2.0) {
             reportHTML += '<p>Status: Sympathetic (stress system) dominance (stress, anxiety, focus).</p>';
@@ -116,12 +142,22 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             reportHTML += '<p>Status: Parasympathetic (rest system) dominance (relaxation, recovery, drowsiness).</p>';
         }
+        reportHTML += '</div>';
 
-        reportHTML += '<h3>Non-Linear Metrics (Poincaré)</h3>';
+        reportHTML += '<div class="report-section"><h3>Non-Linear Metrics (Poincaré)</h3>';
         reportHTML += `<p>SD1: ${metrics.HRV_SD1.toFixed(2)} ms (Short-term variability, parasympathetic assessment)</p>`;
         reportHTML += `<p>SD2: ${metrics.HRV_SD2.toFixed(2)} ms (Long-term variability, overall assessment)</p>`;
+        reportHTML += '</div>';
 
         reportContainer.innerHTML = reportHTML;
+
+        gsap.from(".report-section", {
+            duration: 0.5,
+            y: 20,
+            opacity: 0,
+            stagger: 0.2,
+            ease: "power1.out"
+        });
     }
 
     function plotPoincare(rr_intervals) {
@@ -137,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
             yaxis: { title: 'RR(i+1) (ms)' }
         };
         Plotly.newPlot('poincare-plot', [trace], layout);
+        gsap.from("#poincare-plot", { duration: 0.5, opacity: 0, delay: 0.5 });
     }
 
     function plotECG(ecg) {
@@ -153,7 +190,11 @@ document.addEventListener('DOMContentLoaded', () => {
             y: ecg.voltage,
             mode: 'lines',
             type: 'scatter',
-            name: 'ECG Segment'
+            name: 'ECG Segment',
+            line: {
+                color: '#2ecc71',
+                width: 2
+            }
         };
 
         const fullLayout = {
@@ -170,6 +211,19 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         Plotly.newPlot('ecg-plot-full', [fullTrace], fullLayout);
-        Plotly.newPlot('ecg-plot-slider', [sliderTrace], sliderLayout);
+        gsap.from("#ecg-plot-full", { duration: 0.5, opacity: 0, delay: 0.7 });
+
+        Plotly.newPlot('ecg-plot-slider', [sliderTrace], sliderLayout).then(() => {
+            const svg = document.querySelector('#ecg-plot-slider .main-svg');
+            const path = svg.querySelector('.scatterlayer .trace path');
+            if (path) {
+                gsap.from(path, {
+                    duration: 2,
+                    drawSVG: 0,
+                    ease: "power1.inOut"
+                });
+            }
+        });
+        gsap.from("#ecg-plot-slider", { duration: 0.5, opacity: 0, delay: 0.9 });
     }
 });
