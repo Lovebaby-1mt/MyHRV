@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const hrUpload = document.getElementById('hr-upload');
     const ecgUpload = document.getElementById('ecg-upload');
     const analyzeButton = document.getElementById('analyze-button');
+    const loader = document.getElementById('loader');
 
     let hrFile = null;
     let ecgFile = null;
@@ -30,6 +31,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        loader.style.display = 'block';
+        analyzeButton.disabled = true;
         reportContainer.innerHTML = '<p>Processing your file...</p>';
 
         try {
@@ -63,6 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("An error occurred:", error);
             reportContainer.innerHTML = `<p class="error">An error occurred: ${error.message}</p>`;
+        } finally {
+            loader.style.display = 'none';
+            analyzeButton.disabled = !hrFile;
         }
     }
 
@@ -135,8 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function plotECG(ecg) {
         const fullTrace = {
-            x: ecg.time,
-            y: ecg.voltage,
+            x: ecg.downsampled_time,
+            y: ecg.downsampled_voltage,
             mode: 'lines',
             type: 'scatter',
             name: 'Full ECG'

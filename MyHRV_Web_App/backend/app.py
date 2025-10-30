@@ -48,9 +48,13 @@ def analyze_hrv():
     if ecg_data:
         ecg_df = pd.read_csv(io.StringIO(ecg_data), comment='#', header=0)
         if 'MS' in ecg_df.columns and 'ECG' in ecg_df.columns:
+            # Downsample for the overview plot
+            downsampled_ecg_df = ecg_df.iloc[::10, :]
             response_data['ecg'] = {
                 'time': ecg_df['MS'].tolist(),
-                'voltage': ecg_df['ECG'].tolist()
+                'voltage': ecg_df['ECG'].tolist(),
+                'downsampled_time': downsampled_ecg_df['MS'].tolist(),
+                'downsampled_voltage': downsampled_ecg_df['ECG'].tolist()
             }
 
     return jsonify(response_data)
