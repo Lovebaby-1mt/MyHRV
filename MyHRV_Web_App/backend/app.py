@@ -24,7 +24,7 @@ def analyze_hrv():
         return jsonify({"error": "HR data is required"}), 400
 
     # Process HR data
-    hr_df = pd.read_csv(io.StringIO(hr_data), comment='#', header=0)
+    hr_df = pd.read_csv(io.StringIO(hr_data), comment='#', header=0, skipinitialspace=True)
     if 'SC' in hr_df.columns and 'RR' in hr_df.columns:
         rr_intervals = hr_df[hr_df['SC'] == 1]['RR'].dropna().tolist()
     else:
@@ -46,7 +46,7 @@ def analyze_hrv():
 
     # Process ECG data if available
     if ecg_data:
-        ecg_df = pd.read_csv(io.StringIO(ecg_data), comment='#', header=0)
+        ecg_df = pd.read_csv(io.StringIO(ecg_data), comment='#', header=0, skipinitialspace=True)
         if 'MS' in ecg_df.columns and 'ECG' in ecg_df.columns:
             # Downsample for the overview plot
             downsampled_ecg_df = ecg_df.iloc[::10, :]
