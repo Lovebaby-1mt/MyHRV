@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRV Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: sans-serif; }
+        #report-container { border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>HRV Analysis</h1>
+    <input type="file" id="file-upload" accept=".txt">
+    <div id="poincare-plot"></div>
+    <div id="report-container"></div>
+
+    <script>
+        document.getElementById('file-upload').addEventListener('change', handleFileSelect, false);
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const response = await fetch('/analyze_hrv', {
+                    method: 'POST',
+                    body: text
+                });
+                const data = await response.json();
+                generateReport(data.metrics);
+                plotPoincare(data.cleaned_rr);
+            };
+            reader.readAsText(file);
+        }
+
+        function generateReport(metrics) {
+            const reportContainer = document.getElementById('report-container');
+            let reportHTML = '<h2>HRV Status Report</h2>';
+
+            // Time-Domain
+            reportHTML += '<h3>Time-Domain Metrics</h3>';
+            const meanHR = 60000 / metrics.HRV_MeanNN;
+            reportHTML += `<p>Mean NN (RR): ${metrics.HRV_MeanNN.toFixed(2)} ms (Average Heart Rate: ${meanHR.toFixed(0)} BPM)</p>`;
+            if (meanHR > 100) {
+                reportHTML += '<p>Status: High heart rate (possible stress, post-exercise, or tachycardia).</p>';
+            } else if (meanHR > 80) {
+                reportHTML += '<p>Status: Awake, alert, or mild stress state.</p>';
+            } else if (meanHR > 60) {
+                reportHTML += '<p>Status: Calm, relaxed resting state.</p>';
+            } else {
+                reportHTML += '<p>Status: Deep relaxation or sleep state.</p>';
+            }
+
+            reportHTML += `<p>RMSSD: ${metrics.HRV_RMSSD.toFixed(2)} ms</p>`;
+            if (metrics.HRV_RMSSD > 50) {
+                reportHTML += '<p>Status: Very active parasympathetic nervous system (good recovery or high endurance).</p>';
+            } else if (metrics.HRV_RMSSD > 20) {
+                reportHTML += '<p>Status: Parasympathetic activity in a healthy, normal range.</p>';
+            } else {
+                reportHTML += '<p>Status: Low parasympathetic activity (possible stress, fatigue, or insufficient recovery).</p>';
+            }
+
+            // Frequency-Domain
+            reportHTML += '<h3>Frequency-Domain Metrics</h3>';
+            reportHTML += `<p>LF/HF Ratio: ${metrics.HRV_LFHF.toFixed(2)}</p>`;
+            if (metrics.HRV_LFHF > 2.0) {
+                reportHTML += '<p>Status: Sympathetic (stress system) dominance (stress, anxiety, focus).</p>';
+            } else if (metrics.HRV_LFHF > 1.0) {
+                reportHTML += '<p>Status: Relative balance, slight sympathetic dominance (awake, alert).</p>';
+            } else {
+                reportHTML += '<p>Status: Parasympathetic (rest system) dominance (relaxation, recovery, drowsiness).</p>';
+            }
+
+            // Non-Linear
+            reportHTML += '<h3>Non-Linear Metrics (Poincaré)</h3>';
+            reportHTML += `<p>SD1: ${metrics.HRV_SD1.toFixed(2)} ms (Short-term variability, parasympathetic assessment)</p>`;
+            reportHTML += `<p>SD2: ${metrics.HRV_SD2.toFixed(2)} ms (Long-term variability, overall assessment)</p>`;
+
+
+            reportContainer.innerHTML = reportHTML;
+        }
+
+        function plotPoincare(rr_intervals) {
+            const trace = {
+                x: rr_intervals.slice(0, -1),
+                y: rr_intervals.slice(1),
+                mode: 'markers',
+                type: 'scatter'
+            };
+            const layout = {
+                title: 'Poincaré Plot',
+                xaxis: { title: 'RR(i) (ms)' },
+                yaxis: { title: 'RR(i+1) (ms)' }
+            };
+            Plotly.newPlot('poincare-plot', [trace], layout);
+        }
+    </script>
+</body>
+</html>
