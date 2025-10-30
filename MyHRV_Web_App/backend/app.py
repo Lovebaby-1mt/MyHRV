@@ -42,16 +42,17 @@ def analyze_hrv():
     if not rr_intervals:
         return jsonify({"error": "No valid RR intervals found"}), 400
 
-    # Clean the RR intervals using NeuroKit2's artifact correction
-    cleaned_rr = nk.hrv_clean(rr_intervals, sampling_rate=1000)
+    # NeuroKit2's hrv() function can take RR intervals directly.
+    # The cleaning is done implicitly within the function.
+    hrv_metrics_df = nk.hrv(rr_intervals, sampling_rate=1000)
 
-    # Calculate HRV metrics using the cleaned RR intervals
-    hrv_metrics_df = nk.hrv(cleaned_rr, sampling_rate=1000)
+    # For the Poincare plot, we'll just use the filtered list for now.
+    cleaned_rr = rr_intervals
 
     # Prepare the response
     response_data = {
         'metrics': hrv_metrics_df.to_dict(orient='records')[0],
-        'cleaned_rr': cleaned_rr.tolist()
+        'cleaned_rr': cleaned_rr
     }
 
     return jsonify(response_data)

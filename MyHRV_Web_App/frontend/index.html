@@ -5,34 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRV Analysis</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <style>
-        body { font-family: sans-serif; }
-        #report-container { border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>HRV Analysis</h1>
-    <input type="file" id="file-upload" accept=".txt">
-    <div id="poincare-plot"></div>
-    <div id="report-container"></div>
+    <div class="container">
+        <h1>HRV Analysis</h1>
+        <input type="file" id="file-upload" accept=".txt" multiple>
+        <div id="poincare-plot"></div>
+        <div id="report-container"></div>
+    </div>
 
     <script>
         document.getElementById('file-upload').addEventListener('change', handleFileSelect, false);
 
         async function handleFileSelect(event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const text = e.target.result;
+            const files = event.target.files;
+            const reportContainer = document.getElementById('report-container');
+
+            if (files.length === 0) {
+                return;
+            }
+
+            // Find the HR file
+            let hrFile = null;
+            for (const file of files) {
+                if (file.name.toLowerCase().includes('hr')) {
+                    hrFile = file;
+                    break;
+                }
+            }
+
+            if (!hrFile) {
+                reportContainer.innerHTML = '<p class="error">Please select an HR file.</p>';
+                return;
+            }
+
+
+            reportContainer.innerHTML = '<p>Processing your file...</p>';
+
+            try {
+                const text = await readFileAsText(hrFile);
+
                 const response = await fetch('/analyze_hrv', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
                     body: text
                 });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Backend error: ${response.status} ${response.statusText}. ${errorText}`);
+                }
+
                 const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(`Analysis error: ${data.error}`);
+                }
+
                 generateReport(data.metrics);
                 plotPoincare(data.cleaned_rr);
-            };
-            reader.readAsText(file);
+
+            } catch (error) {
+                console.error("An error occurred:", error);
+                reportContainer.innerHTML = `<p class="error">An error occurred: ${error.message}</p>`;
+            }
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsText(file);
+            });
         }
 
         function generateReport(metrics) {
