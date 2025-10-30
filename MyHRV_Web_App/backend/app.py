@@ -42,9 +42,11 @@ def analyze_hrv():
     if not rr_intervals:
         return jsonify({"error": "No valid RR intervals found"}), 400
 
-    # NeuroKit2's hrv() function can take RR intervals directly.
-    # The cleaning is done implicitly within the function.
-    hrv_metrics_df = nk.hrv(rr_intervals, sampling_rate=1000)
+    # Convert RR intervals to peak locations
+    peaks = nk.intervals_to_peaks(rr_intervals)
+
+    # Calculate HRV metrics using the peaks
+    hrv_metrics_df = nk.hrv(peaks, sampling_rate=1000)
 
     # For the Poincare plot, we'll just use the filtered list for now.
     cleaned_rr = rr_intervals
@@ -58,6 +60,9 @@ def analyze_hrv():
     return jsonify(response_data)
 
 if __name__ == '__main__':
-    # Running from 'backend' dir, so host needs to be 0.0.0.0 to be accessible from browser
-    # Port is 5000 by default.
-    app.run(debug=True, host='0.0.0.0')
+    try:
+        # Running from 'backend' dir, so host needs to be 0.0.0.0 to be accessible from browser
+        # Port is 5000 by default.
+        app.run(debug=True, host='0.0.0.0')
+    except Exception as e:
+        print(f"Failed to start server: {e}")

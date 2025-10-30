@@ -10,41 +10,54 @@
 <body>
     <div class="container">
         <h1>HRV Analysis</h1>
+
+        <div class="instructions">
+            <p><strong>Step 1:</strong> Click the button below to select your HR (and optionally ECG) data file(s).</p>
+        </div>
         <input type="file" id="file-upload" accept=".txt" multiple>
+
+        <div class="instructions">
+            <p><strong>Step 2:</strong> Once your HR file is selected, click the "Analyze" button to process the data.</p>
+        </div>
+        <button id="analyze-button" disabled>Analyze</button>
+
         <div id="poincare-plot"></div>
         <div id="report-container"></div>
     </div>
 
     <script>
-        document.getElementById('file-upload').addEventListener('change', handleFileSelect, false);
+        const fileUpload = document.getElementById('file-upload');
+        const analyzeButton = document.getElementById('analyze-button');
+        let selectedHrFile = null;
 
-        async function handleFileSelect(event) {
-            const files = event.target.files;
-            const reportContainer = document.getElementById('report-container');
-
-            if (files.length === 0) {
-                return;
-            }
-
-            // Find the HR file
-            let hrFile = null;
-            for (const file of files) {
-                if (file.name.toLowerCase().includes('hr')) {
-                    hrFile = file;
-                    break;
+        fileUpload.addEventListener('change', () => {
+            const files = fileUpload.files;
+            selectedHrFile = null;
+            if (files.length > 0) {
+                for (const file of files) {
+                    if (file.name.toLowerCase().includes('hr')) {
+                        selectedHrFile = file;
+                        break;
+                    }
                 }
             }
+            analyzeButton.disabled = !selectedHrFile;
+        }, false);
 
-            if (!hrFile) {
+        analyzeButton.addEventListener('click', handleAnalysis, false);
+
+        async function handleAnalysis() {
+            const reportContainer = document.getElementById('report-container');
+
+            if (!selectedHrFile) {
                 reportContainer.innerHTML = '<p class="error">Please select an HR file.</p>';
                 return;
             }
 
-
             reportContainer.innerHTML = '<p>Processing your file...</p>';
 
             try {
-                const text = await readFileAsText(hrFile);
+                const text = await readFileAsText(selectedHrFile);
 
                 const response = await fetch('/analyze_hrv', {
                     method: 'POST',
