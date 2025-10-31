@@ -3,6 +3,7 @@ import neurokit2 as nk
 import plotly.graph_objects as go
 import sys
 import os
+from utils import clean_rr_artifacts_py
 
 def generate_report_html(metrics):
     report_html = '<h2>HRV Status Report</h2>'
@@ -49,12 +50,15 @@ def main(hr_file, ecg_file=None):
     # Process HR data
     hr_df = pd.read_csv(hr_file, comment='#', header=0, skipinitialspace=True)
     rr_intervals = hr_df[hr_df['SC'] == 1]['RR'].dropna().tolist()
-    peaks = nk.intervals_to_peaks(rr_intervals)
+
+    rr_intervals_clean = clean_rr_artifacts_py(rr_intervals)
+
+    peaks = nk.intervals_to_peaks(rr_intervals_clean)
     hrv_metrics_df = nk.hrv(peaks, sampling_rate=1000)
     metrics = hrv_metrics_df.to_dict(orient='records')[0]
 
     # Create plots
-    poincare_fig = go.Figure(data=go.Scatter(x=rr_intervals[:-1], y=rr_intervals[1:], mode='markers'))
+    poincare_fig = go.Figure(data=go.Scatter(x=rr_intervals_clean[:-1], y=rr_intervals_clean[1:], mode='markers'))
     poincare_fig.update_layout(title='Poincaré Plot', xaxis_title='RR(i) (ms)', yaxis_title='RR(i+1) (ms)')
     poincare_html = poincare_fig.to_html(full_html=False, include_plotlyjs='cdn')
 
@@ -93,7 +97,7 @@ def main(hr_file, ecg_file=None):
 
 
     with open(output_path, 'w') as f:
-        f.write(final_html)
+        f.write(.final_html)
 
 if __name__ == '__main__':
     hr_file_path = sys.argv[1]

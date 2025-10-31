@@ -88,6 +88,13 @@ button:hover:not(:disabled) {
     padding-bottom: 10px;
 }
 
+.plot-header {
+    margin-top: 40px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+    color: #34495e;
+}
+
 .plot-container {
     margin-top: 30px;
     border: 1px solid #e0e0e0;

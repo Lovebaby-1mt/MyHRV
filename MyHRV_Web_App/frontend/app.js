@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
         Plotly.purge('poincare-plot');
         Plotly.purge('ecg-plot-full');
         Plotly.purge('ecg-plot-slider');
+        Plotly.purge('dynamic-hrv-plot');
+        Plotly.purge('state-space-plot');
 
 
         try {
@@ -73,6 +75,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             generateReport(data.metrics);
+
+            if (data.dynamic_metrics && data.dynamic_metrics.time_min.length > 0) {
+                plotDynamicHRV(data.dynamic_metrics);
+                plotStateSpace(data.dynamic_metrics);
+            }
+
             plotPoincare(data.cleaned_rr);
             if (data.ecg) {
                 plotECG(data.ecg);
@@ -225,5 +233,83 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         gsap.from("#ecg-plot-slider", { duration: 0.5, opacity: 0, delay: 0.9 });
+    }
+
+    function plotDynamicHRV(metrics) {
+        const trace1 = {
+            x: metrics.time_min,
+            y: metrics.hr,
+            mode: 'lines+markers',
+            name: 'Heart Rate (BPM)',
+            yaxis: 'y1'
+        };
+
+        const trace2 = {
+            x: metrics.time_min,
+            y: metrics.rmssd,
+            mode: 'lines+markers',
+            name: 'RMSSD (ms)',
+            yaxis: 'y2'
+        };
+
+        const trace3 = {
+            x: metrics.time_min,
+            y: metrics.lfhf,
+            mode: 'lines+markers',
+            name: 'LF/HF Ratio',
+            yaxis: 'y3'
+        };
+
+        const layout = {
+            title: 'Dynamic Time-Variant HRV Metrics',
+            xaxis: { title: 'Time (minutes)' },
+            yaxis: { title: 'Heart Rate (BPM)', titlefont: { color: '#1f77b4' }, tickfont: { color: '#1f77b4' } },
+            yaxis2: {
+                title: 'RMSSD (ms)',
+                titlefont: { color: '#ff7f0e' },
+                tickfont: { color: '#ff7f0e' },
+                overlaying: 'y',
+                side: 'right'
+            },
+            yaxis3: {
+                title: 'LF/HF Ratio',
+                titlefont: { color: '#2ca02c' },
+                tickfont: { color: '#2ca02c' },
+                overlaying: 'y',
+                side: 'right',
+                position: 0.95
+            },
+            legend: { x: 1.1, y: 1 }
+        };
+
+        Plotly.newPlot('dynamic-hrv-plot', [trace1, trace2, trace3], layout);
+        gsap.from("#dynamic-hrv-plot", { duration: 0.5, opacity: 0, delay: 0.6 });
+    }
+
+    function plotStateSpace(metrics) {
+        const trace = {
+            x: metrics.rmssd,
+            y: metrics.lfhf,
+            mode: 'markers+lines',
+            type: 'scatter',
+            marker: {
+                color: metrics.time_min,
+                colorscale: 'Viridis',
+                showscale: true,
+                colorbar: {
+                    title: 'Time (min)'
+                }
+            }
+        };
+
+        const layout = {
+            title: 'HRV State Space (RMSSD vs. LF/HF)',
+            xaxis: { title: 'RMSSD (ms)' },
+            yaxis: { title: 'LF/HF Ratio' },
+            hovermode: 'closest'
+        };
+
+        Plotly.newPlot('state-space-plot', [trace], layout);
+        gsap.from("#state-space-plot", { duration: 0.5, opacity: 0, delay: 0.8 });
     }
 });
