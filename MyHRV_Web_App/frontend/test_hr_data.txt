@@ -1,0 +1,13 @@
+# File: Heart Rate data
+# Columns:
+# 1. Heart Rate (beats per minute) (HR)
+# 2. RR interval (time between two beats) in milliseconds (RR)
+# 3. Measurement sample timestamps in milliseconds (MS)
+# 4. Skin Contact Status (0 = false, 1 = true) (SC)
+
+HR, RR, MS, SC
+0, 878, 878, 0
+77, 853, 1731, 1
+76, 836, 2567, 1
+76, 867, 3434, 1
+74, 879, 4313, 1

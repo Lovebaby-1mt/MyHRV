@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRV Analysis</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/DrawSVGPlugin.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-container">
+        <div class="control-panel">
+            <h1>HRV Analysis</h1>
+            <div class="instructions">
+                <p><strong>Step 1:</strong> Upload your HR and ECG files.</p>
+            </div>
+            <label for="hr-upload">HR File (.txt)</label>
+            <input type="file" id="hr-upload" accept=".txt">
+
+            <label for="ecg-upload">ECG File (.txt)</label>
+            <input type="file" id="ecg-upload" accept=".txt">
+
+            <div class="instructions">
+                <p><strong>Step 2:</strong> Click the "Analyze" button.</p>
+            </div>
+            <button id="analyze-button" disabled>Analyze</button>
+            <div id="loader" class="loader-overlay" style="display: none;">
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+                <div class="loader-dot"></div>
+            </div>
+        </div>
+        <div class="results-panel">
+            <div id="report-container"></div>
+            <div id="ecg-plot-full"></div>
+            <div id="ecg-plot-slider"></div>
+            <div id="poincare-plot"></div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

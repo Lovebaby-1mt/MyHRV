@@ -1,0 +1,16 @@
+# File: Electrocardiogram data
+# Columns:
+# 1. Raw ECG voltage in millivolts (ECG)
+# 3. Measurement sample timestamps in milliseconds (MS)
+
+ECG, MS
+0.048, 8
+0.05, 15
+0.05, 23
+0.05, 31
+0.05, 38
+0.052, 46
+0.052, 54
+0.055, 61
+0.057, 69
+0.057, 77
